@@ -2,26 +2,15 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs";
     flake-utils.url = "github:numtide/flake-utils";
+    Unity.url = "github:ldenefle/Unity";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs = { self, nixpkgs, flake-utils, Unity }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+        unity = Unity.packages.${system}.default;
 
-        unity = pkgs.stdenv.mkDerivation {
-          name = "unity";
-          src = pkgs.fetchFromGitHub {
-            owner = "ThrowTheSwitch";
-            repo = "Unity";
-            rev = "v2.5.2";
-            hash = "sha256-NokjRgBhOW9EvuZWbNGPqHlQ+OAXJMVZZJf9mXEa+YM=";
-          };
-          installPhase = ''
-            mkdir -p $out
-            cp -rv $src/* $out
-          '';
-        };
         cmock-gems = pkgs.bundlerEnv {
           name = "gems";
           ruby = pkgs.ruby;
@@ -30,7 +19,7 @@
         deps = [ cmock-gems pkgs.ruby unity];
         packageName = "cmock";
         cmock = pkgs.stdenv.mkDerivation {
-          name = "cmock";
+          name = packageName;
           src = ./.;
           propagatedBuildInputs = deps;
           installPhase = ''
